@@ -82,9 +82,12 @@
 
             <label for="location">Localización del dolor:</label>
             <select id="location">
+                <option value="En la nuca">En la nuca</option>
+                <option value="En ambas sienes">En ambas sienes</option>
+                <option value="En los ojos">En los ojos</option>
+                <option value="En la frente">En la frente</option>
                 <option value="Unilateral (Un lado)">Unilateral (Un lado)</option>
                 <option value="Bilateral (Ambos lados)">Bilateral (Ambos lados)</option>
-                <option value="Frontal">Frontal</option>
                 <option value="Generalizado">Generalizado</option>
             </select>
 
@@ -144,6 +147,10 @@
 
     function loadEntries() {
         const entries = JSON.parse(localStorage.getItem('migraineEntries')) || [];
+        
+        // Ordenar por fecha de más reciente a más antigua
+        entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
         historyLog.innerHTML = entries.length === 0 ? '<p>No hay registros guardados.</p>' : '';
         
         entries.forEach((entry) => {
@@ -177,7 +184,7 @@
         };
 
         const entries = JSON.parse(localStorage.getItem('migraineEntries')) || [];
-        entries.unshift(newEntry);
+        entries.push(newEntry);
         localStorage.setItem('migraineEntries', JSON.stringify(entries));
 
         form.reset();
