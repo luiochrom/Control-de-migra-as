@@ -57,6 +57,14 @@
             margin-bottom: 15px;
         }
         .entry-header { font-weight: bold; font-size: 0.9em; color: #666; }
+        .badge {
+            display: inline-block;
+            background: #e0e0e0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -71,13 +79,11 @@
             <label for="date">Fecha y Hora:</label>
             <input type="datetime-local" id="date" required>
 
-            <label for="intensity">Repercusión / Intensidad (0 al 3):</label>
-            <input type="number" id="intensity" min="0" max="10" required>
+            <label for="intensity">Intensidad (1 al 10):</label>
+            <input type="number" id="intensity" min="1" max="10" required>
 
-            <label for="location">Localización / Tipo:</label>
+            <label for="location">Localización del dolor:</label>
             <select id="location">
-                <option value="Opresivo">Opresivo</option>
-                <option value="Pulsátil">Pulsátil</option>
                 <option value="Unilateral (Un lado)">Unilateral (Un lado)</option>
                 <option value="Bilateral (Ambos lados)">Bilateral (Ambos lados)</option>
                 <option value="Frontal">Frontal</option>
@@ -85,13 +91,13 @@
             </select>
 
             <label for="symptoms">Síntomas (separados por coma):</label>
-            <input type="text" id="symptoms" placeholder="Ej: Aura, Náuseas, Fotofobia">
+            <input type="text" id="symptoms" placeholder="Ej: Náuseas, Aura, Fotofobia, Mareo">
 
             <label for="triggers">Posibles detonantes:</label>
-            <input type="text" id="triggers" placeholder="Ej: Dolor de cuello, Estrés, Falta de sueño">
+            <input type="text" id="triggers" placeholder="Ej: Estrés, Falta de sueño, Café, Cambios de tiempo">
 
             <label for="medication">Medicación tomada:</label>
-            <input type="text" id="medication" placeholder="Ej: Espidifen, Rizatriptán">
+            <input type="text" id="medication" placeholder="Ej: Ibuprofeno 600mg, Triptán">
 
             <button type="submit">Guardar Registro</button>
         </form>
@@ -105,24 +111,54 @@
 </div>
 
 <script>
-    // --- DATOS INICIALES CARGADOS DESDE HOJA GOOGLE DRIVE ---
-    const initialData = [
-        { date: "2026-09-30T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-09-27T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-09-25T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-09-12T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-09-08T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-09-03T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-08-31T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-08-18T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-08-17T12:00", intensity: "2", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen + Rizatriptan (Preventivo: Topiramato)" },
-        { date: "2026-08-01T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-07-26T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-07-10T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen + Rizatriptan (Preventivo: Topiramato)" },
-        { date: "2026-07-06T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-06-21T12:00", intensity: "2", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-06-18T12:00", intensity: "2", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-06-17T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-06-03T12:00", intensity: "1", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen (Preventivo: Topiramato)" },
-        { date: "2026-04-29T07:45", intensity: "2", location: "Opresivo", symptoms: "", triggers: "", medication: "Espidifen + Rizatriptan (Preventivo: Amitriptilina)" },
-        { date: "2026-04
+    // Establecer fecha y hora actual por defecto
+    document.getElementById('date').value = new Date().toISOString().slice(0, 16);
+
+    const form = document.getElementById('migraineForm');
+    const historyLog = document.getElementById('historyLog');
+
+    function loadEntries() {
+        const entries = JSON.parse(localStorage.getItem('migraineEntries')) || [];
+        historyLog.innerHTML = entries.length === 0 ? '<p>No hay registros guardados.</p>' : '';
+        
+        entries.forEach((entry, index) => {
+            const entryEl = document.createElement('div');
+            entryEl.className = 'entry';
+            entryEl.innerHTML = `
+                <div class="entry-header">${new Date(entry.date).toLocaleString()}</div>
+                <div><strong>Intensidad:</strong> ${entry.intensity}/10</div>
+                <div><strong>Localización:</strong> ${entry.location}</div>
+                ${entry.symptoms ? `<div><strong>Síntomas:</strong> ${entry.symptoms}</div>` : ''}
+                ${entry.triggers ? `<div><strong>Detonantes:</strong> ${entry.triggers}</div>` : ''}
+                ${entry.medication ? `<div><strong>Medicación:</strong> ${entry.medication}</div>` : ''}
+            `;
+            historyLog.appendChild(entryEl);
+        });
+    }
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const newEntry = {
+            date: document.getElementById('date').value,
+            intensity: document.getElementById('intensity').value,
+            location: document.getElementById('location').value,
+            symptoms: document.getElementById('symptoms').value,
+            triggers: document.getElementById('triggers').value,
+            medication: document.getElementById('medication').value
+        };
+
+        const entries = JSON.parse(localStorage.getItem('migraineEntries')) || [];
+        entries.unshift(newEntry);
+        localStorage.setItem('migraineEntries', JSON.stringify(entries));
+
+        form.reset();
+        document.getElementById('date').value = new Date().toISOString().slice(0, 16);
+        loadEntries();
+    });
+
+    loadEntries();
+</script>
+
+</body>
+</html>
