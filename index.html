@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diario de Migrañas</title>
+    <style>
+        :root {
+            --primary: #5c6bc0;
+            --background: #f4f5f7;
+            --card: #ffffff;
+            --text: #333333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+        h1, h2 { text-align: center; color: var(--primary); }
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.9; }
+        .entry {
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+        .entry-header { font-weight: bold; font-size: 0.9em; color: #666; }
+        .badge {
+            display: inline-block;
+            background: #e0e0e0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Control de Migrañas</h1>
+
+    <!-- Formulario de registro -->
+    <div class="card">
+        <h2>Registrar Crisis</h2>
+        <form id="migraineForm">
+            <label for="date">Fecha y Hora:</label>
+            <input type="datetime-local" id="date" required>
+
+            <label for="intensity">Intensidad (1 al 10):</label>
+            <input type="number" id="intensity" min="1" max="10" required>
+
+            <label for="location">Localización del dolor:</label>
+            <select id="location">
+                <option value="Unilateral (Un lado)">Unilateral (Un lado)</option>
+                <option value="Bilateral (Ambos lados)">Bilateral (Ambos lados)</option>
+                <option value="Frontal">Frontal</option>
+                <option value="Generalizado">Generalizado</option>
+            </select>
+
+            <label for="symptoms">Síntomas (separados por coma):</label>
+            <input type="text" id="symptoms" placeholder="Ej: Náuseas, Aura, Fotofobia, Mareo">
+
+            <label for="triggers">Posibles detonantes:</label>
+            <input type="text" id="triggers" placeholder="Ej: Estrés, Falta de sueño, Café, Cambios de tiempo">
+
+            <label for="medication">Medicación tomada:</label>
+            <input type="text" id="medication" placeholder="Ej: Ibuprofeno 600mg, Triptán">
+
+            <button type="submit">Guardar Registro</button>
+        </form>
+    </div>
+
+    <!-- Historial de registros -->
+    <div class="card">
+        <h2>Historial Reciente</h2>
+        <div id="historyLog"></div>
+    </div>
+</div>
+
+<script>
+    // Establecer fecha y hora actual por defecto
+    document.getElementById('date').value = new Date().toISOString().slice(0, 16);
+
+    const form = document.getElementById('migraineForm');
+    const historyLog = document.getElementById('historyLog');
+
+    function loadEntries() {
+        const entries = JSON.parse(localStorage.getItem('migraineEntries')) || [];
+        historyLog.innerHTML = entries.length === 0 ? '<p>No hay registros guardados.</p>' : '';
+        
+        entries.forEach((entry, index) => {
+            const entryEl = document.createElement('div');
+            entryEl.className = 'entry';
+            entryEl.innerHTML = `
+                <div class="entry-header">${new Date(entry.date).toLocaleString()}</div>
+                <div><strong>Intensidad:</strong> ${entry.intensity}/10</div>
+                <div><strong>Localización:</strong> ${entry.location}</div>
+                ${entry.symptoms ? `<div><strong>Síntomas:</strong> ${entry.symptoms}</div>` : ''}
+                ${entry.triggers ? `<div><strong>Detonantes:</strong> ${entry.triggers}</div>` : ''}
+                ${entry.medication ? `<div><strong>Medicación:</strong> ${entry.medication}</div>` : ''}
+            `;
+            historyLog.appendChild(entryEl);
+        });
+    }
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const newEntry = {
+            date: document.getElementById('date').value,
+            intensity: document.getElementById('intensity').value,
+            location: document.getElementById('location').value,
+            symptoms: document.getElementById('symptoms').value,
+            triggers: document.getElementById('triggers').value,
+            medication: document.getElementById('medication').value
+        };
+
+        const entries = JSON.parse(localStorage.getItem('migraineEntries')) || [];
+        entries.unshift(newEntry);
+        localStorage.setItem('migraineEntries', JSON.stringify(entries));
+
+        form.reset();
+        document.getElementById('date').value = new Date().toISOString().slice(0, 16);
+        loadEntries();
+    });
+
+    loadEntries();
+</script>
+
+</body>
+</html>
